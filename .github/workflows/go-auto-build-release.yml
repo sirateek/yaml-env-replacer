@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["linux"]
+        os: ["linux", "darwin", "windows"]
         arch: ["arm64", "amd64"]
     steps:
       - uses: actions/checkout@v3
@@ -41,4 +41,4 @@ jobs:
           draft: true
           prerelease: true
           files: |
-            */yaml-env-replacer-*
+            **/yaml-env-replacer-*
