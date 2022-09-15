@@ -2,10 +2,9 @@ name: Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -14,26 +13,26 @@ jobs:
         os: ["linux"]
         arch: ["arm64", "amd64"]
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.19
-    - name: Build
-      run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o yaml-env-replacer-${{ matrix.os }}-${{ matrix.arch }}
-    - name: Archive build output artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: yaml-env-replacer-${{ matrix.os }}-${{ matrix.arch }}
-        path: yaml-env-replacer-${{ matrix.os }}-${{ matrix.arch }}
-        retention-days: 1
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - name: Build
+        run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o yaml-env-replacer-${{ matrix.os }}-${{ matrix.arch }}
+      - name: Archive build output artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: yaml-env-replacer-${{ matrix.os }}-${{ matrix.arch }}
+          path: yaml-env-replacer-${{ matrix.os }}-${{ matrix.arch }}
+          retention-days: 1
   create-new-release:
-      runs-on: ubuntu-latest
-      needs: build
-      steps:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: "Download all artifacts"
         uses: actions/download-artifact@v3
-        
+
       - name: "Release by using action-automatic-releases"
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -42,5 +41,4 @@ jobs:
           draft: true
           prerelease: true
           files: |
-           yaml-env-replacer-*
-      
+            *yaml-env-replacer-*
