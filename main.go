@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 
@@ -58,8 +59,9 @@ func main() {
 			logger.Info("Replacing the ", value, " value with ", envValue)
 
 			// Replace that with value from viper.
-			localMatcher, _ := regexp.Compile(value)
-			configDataString = localMatcher.ReplaceAllString(configDataString, envValue)
+			localMatcher, _ := regexp.Compile(fmt.Sprint(`\`, value))
+			configDataString = localMatcher.ReplaceAllLiteralString(configDataString, envValue)
+			// fmt.Print(configDataString)
 		}
 		logger.Info("Done replacing.")
 	}
