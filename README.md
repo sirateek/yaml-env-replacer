@@ -1,3 +1,5 @@
+[![Release](https://github.com/sirateek/yaml-env-replacer/actions/workflows/go-auto-build-release.yml/badge.svg)](https://github.com/sirateek/yaml-env-replacer/actions/workflows/go-auto-build-release.yml)
+
 # yaml-env-replacer
 
 A Go application that read the yaml file and replace a variable in that file with a value from ENV
