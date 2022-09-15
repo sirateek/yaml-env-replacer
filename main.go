@@ -11,7 +11,11 @@ import (
 func main() {
 
 	// Read the flag from command line.
-	path := ParseFlag()
+	path, err := ParseFlag()
+	if err != nil {
+		os.Exit(1)
+		return
+	}
 
 	// Read the configFilePath
 	configData, err := ReadFile(path.ConfigFile)

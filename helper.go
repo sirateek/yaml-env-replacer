@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"os"
 	"regexp"
@@ -16,7 +17,9 @@ type filePath struct {
 	OutputFile string
 }
 
-func ParseFlag() filePath {
+var ErrEmptyRequiredField error = errors.New("please specify `-config-file` and `-env-file`")
+
+func ParseFlag() (filePath, error) {
 	// Read env from file based on inputted flag.
 	configFilePath := flag.String("config-file", "", "A Path to your yaml file for a replace.")
 	envFilePath := flag.String("env-file", "", "A Path to your .env file containing env var for a replace.")
@@ -27,11 +30,20 @@ func ParseFlag() filePath {
 	logger.Info("EnvFile Path: ", *envFilePath)
 	logger.Info("OutFile Path: ", *outFilePath)
 
+	if *configFilePath == "" || *envFilePath == "" {
+		logger.Error(ErrEmptyRequiredField.Error())
+		return filePath{}, ErrEmptyRequiredField
+	}
+
+	if *outFilePath == "" {
+		outFilePath = configFilePath
+	}
+
 	return filePath{
 		ConfigFile: *configFilePath,
 		EnvFile:    *envFilePath,
 		OutputFile: *outFilePath,
-	}
+	}, nil
 
 }
 
