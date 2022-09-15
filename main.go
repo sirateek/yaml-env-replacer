@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"flag"
 	"os"
 	"regexp"
 
@@ -10,75 +8,66 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Example flag:
-// -config-file=$HOME/project/configs/test.yaml -env-file=$HOME/project/envs/prod.env -out=$HOME/project/out/test.yaml
-
 func main() {
-	// Read env from file based on inputted flag.
-	configFilePath := flag.String("config-file", "", "A Path to your yaml file for a replace.")
-	envFilePath := flag.String("env-file", "", "A Path to your .env file containing env var for a replace.")
-	outFilePath := flag.String("out", "", "A Path to place where the output of this replacement will be on.")
 
-	flag.Parse()
-	logger.Info("ConfigFile Path: ", *configFilePath)
-	logger.Info("EnvFile Path: ", *envFilePath)
-	logger.Info("OutFile Path: ", *outFilePath)
+	// Read the flag from command line.
+	path := ParseFlag()
 
 	// Read the configFilePath
-	configData, err := os.ReadFile(*configFilePath)
+	configData, err := ReadFile(path.ConfigFile)
 	if err != nil {
-		logger.Error(err)
 		os.Exit(1)
+		return
 	}
 	configDataString := string(configData)
 
 	// Check if there is really a replace syntax
-	r, _ := regexp.Compile(`\${(.*)}`)
-	searchResult := r.FindAllString(configDataString, -1)
-	logger.Info("RegRex Result: ", searchResult)
+	envReplaceSyntax := GetEnvReplaceSyntaxRegExp()
+	searchResult := envReplaceSyntax.FindAllString(configDataString, -1)
+	logger.Info("Total Replace: ", len(searchResult))
+	logger.Debug(searchResult)
 	if len(searchResult) == 0 {
-		logger.Info("There is no replacing syntax `${...}` in the config file. Kindly Exiting... :-)")
+		logger.Warn("There is no replacing syntax `${...}` in the config file. Kindly Exiting... :-)")
 		os.Exit(0)
+		return
 	}
 
-	//  Read target file.
-	envData, err := os.ReadFile(*envFilePath)
+	// Read Env file.
+	err = ReadEnvConfigFile(path.EnvFile)
 	if err != nil {
-		logger.Error(err)
 		os.Exit(1)
-	}
-	viper.SetConfigType("env")
-	err = viper.ReadConfig(bytes.NewBuffer(envData))
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
+		return
 	}
 
-	// Replace the `${NAME}` by using RegEx.
+	// Replace the `${NAME}` by using RegExp.
 	for _, value := range searchResult {
 		// Substring value to remove ${ and }
 		lengthOfEnvKey := len(value)
 		envKey := value[2 : lengthOfEnvKey-1]
+		logger.Debug("Getting value for key: ", envKey)
 
 		//  Get env from viper.
 		envValue := viper.GetString(envKey)
+		logger.Debug("Value is: ", envValue)
 		if envValue == "" {
 			logger.Error("There is no replacement for this key: ", envKey)
 			os.Exit(1)
+			return
 		}
+		logger.Info("Replacing the ", value, " value with ", envValue)
 
 		// Replace that with value from viper.
 		localMatcher, _ := regexp.Compile(value)
 		configDataString = localMatcher.ReplaceAllString(configDataString, envValue)
 	}
+	logger.Info("Done replacing.")
 
-	logger.Info(configDataString)
 	// Write to file.
-	err = os.WriteFile(*outFilePath, []byte(configDataString), 0777)
+	err = os.WriteFile(path.OutputFile, []byte(configDataString), 0777)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(1)
 	}
-
+	logger.Info("Done the process. Goodbye :-)")
 	os.Exit(0)
 }
