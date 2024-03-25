@@ -61,7 +61,6 @@ func main() {
 			// Replace that with value from viper.
 			localMatcher, _ := regexp.Compile(fmt.Sprint(`\`, value))
 			configDataString = localMatcher.ReplaceAllLiteralString(configDataString, envValue)
-			// fmt.Print(configDataString)
 		}
 		logger.Info("Done replacing.")
 	}
